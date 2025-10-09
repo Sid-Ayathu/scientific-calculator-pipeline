@@ -1,0 +1,28 @@
+# This playbook deploys the scientific calculator Docker container.
+- name: Deploy Scientific Calculator
+  hosts: localhost
+  become: yes
+
+  tasks:
+    - name: Pull the calculator Docker image from Docker Hub
+      docker_image:
+        name: salvoslayer/scientific_calculator:latest
+        source: pull
+
+    - name: Stop any existing container to prevent conflicts
+      # We use the shell module to stop and remove the old container.
+      # 'ignore_errors: yes' prevents the playbook from failing if the
+      # container doesn't exist on the first run.
+      ansible.builtin.shell:
+        cmd: "docker stop calculator-app && docker rm calculator-app"
+      ignore_errors: yes
+
+    - name: Run the Docker container interactively
+      # Bypassing the docker_container module for this interactive task.
+      # We use the 'shell' module to execute the exact 'docker run' command.
+      # This provides a more direct connection to the container's TTY,
+      # which should resolve the issue of the menu not appearing.
+      # The '--rm' flag automatically removes the container when it exits.
+      ansible.builtin.shell:
+        cmd: "docker run --rm -it --name calculator-app salvoslayer/scientific_calculator:latest"
+
