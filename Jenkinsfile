@@ -1,15 +1,17 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.10-alpine'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    // agent {
+    //     docker {
+    //         image 'python:3.10-alpine'
+    //         args '-v /var/run/docker.sock:/var/run/docker.sock'
+    //     }
+    // }
+
+    agent any
 
     environment {
         DOCKERHUB_USERNAME = 'salvoslayer'
         IMAGE_NAME = "${DOCKERHUB_USERNAME}/scientific_calculator"
-        DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
+        DOCKER_CREDENTIALS_ID = 'dockerhub-credentials' 
     }
 
     stages {
