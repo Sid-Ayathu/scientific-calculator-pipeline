@@ -1,12 +1,11 @@
 pipeline {
-    // agent {
-    //     docker {
-    //         image 'python:3.10-alpine'
-    //         args '-v /var/run/docker.sock:/var/run/docker.sock'
-    //     }
-    // }
-
-    agent any
+    agent {
+        // Run inside a Linux container to ensure sh commands work
+        docker {
+            image 'python:3.10-alpine'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
 
     environment {
         DOCKERHUB_USERNAME = 'salvoslayer'
