@@ -75,9 +75,7 @@
 
 //aruns jenkinfile
 pipeline {
-    agent {
-        label 'wsl'   // use a node or agent configured to run in WSL
-    }
+    agent any
 
     environment {
         PATH = "/usr/bin:/usr/local/bin:${env.PATH}"   // make sure WSL binaries are accessible
