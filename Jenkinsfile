@@ -93,7 +93,7 @@ pipeline {
         stage('Install dependencies & Test') {
             steps {
                 sh 'pip install -r requirements.txt'
-                sh 'pytest -q'
+                sh 'python3 -m unittest discover'
             }
         }
 
