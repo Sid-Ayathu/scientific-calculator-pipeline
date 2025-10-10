@@ -1,0 +1,7 @@
+---
+- name: Deploy Scientific Calculator
+  hosts: local
+  tasks:
+    - name: Print a deployment message
+      ansible.builtin.debug:
+        msg: "Deployment would happen here. The pipeline is complete!"
