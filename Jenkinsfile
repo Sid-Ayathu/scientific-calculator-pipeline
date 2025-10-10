@@ -75,7 +75,9 @@
 
 //vishruth's jenkinfile
 pipeline {
-    agent any
+    agent {
+        label 'wsl'
+    }
     environment {
         DOCKERHUB_USER = 'salvoslayer'
         DOCKER_IMAGE = "${DOCKERHUB_USER}/scientific-calculator"
