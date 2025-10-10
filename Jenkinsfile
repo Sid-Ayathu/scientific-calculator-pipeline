@@ -73,89 +73,56 @@
 //     }
 // }
 
-//aruns jenkinfile
+//vishruth's jenkinfile
 pipeline {
     agent any
-
     environment {
-        PATH = "/usr/bin:/usr/local/bin:${env.PATH}"   // make sure WSL binaries are accessible
-        PYTHONUNBUFFERED = '1'
-        IMAGE_NAME = "scientific-calculator:latest"
+        DOCKERHUB_USER = 'salvoslayer'
+        DOCKER_IMAGE = "${DOCKERHUB_USER}/scientific-calculator"
     }
 
     stages {
-        stage('Setup Environment') {
+        stage('Checkout') {
             steps {
-                sh '''
-                echo "Running on $(uname -a)"
-                python3 --version || sudo apt install -y python3
-                pip3 --version || sudo apt install -y python3-pip
-                ansible --version || sudo apt install -y ansible
-                '''
+                git branch: 'main', url: 'https://github.com/Sid-Ayathu/scientific-calculator-pipeline.git'
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install dependencies & Test') {
             steps {
-                sh '''
-                echo "Installing Python dependencies..."
-                pip3 install --user -r requirements.txt
-                '''
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh '''
-                echo "Running pytest..."
-                python3 -m pytest --maxfail=1 --disable-warnings -q
-                '''
+                sh 'pip install -r requirements.txt'
+                sh 'pytest -q'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                echo "Building Docker image inside WSL..."
-                docker --version
-                docker build -t $IMAGE_NAME .
-                '''
+                sh 'docker build -t $DOCKER_IMAGE:latest .'
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                    echo "Logging into DockerHub..."
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker push $IMAGE_NAME
-                    '''
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh 'echo $PASS | docker login -u $USER --password-stdin'
+                    sh 'docker push $DOCKER_IMAGE:latest'
                 }
             }
         }
 
         stage('Deploy with Ansible') {
             steps {
-                sh '''
-                echo "Running Ansible deployment..."
-                ansible-playbook ansible/deploy.yml
-                '''
+                sh 'ansible-playbook -i hosts.ini deploy.yml'
             }
         }
     }
 
     post {
         success {
-            mail to: 'legendaryedd749@gmail.com',
-                subject: "✅ Build Success - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: "Build succeeded. Docker image pushed successfully to DockerHub."
+            echo 'Pipeline finished successfully ✅'
         }
-
         failure {
-            mail to: 'legendaryedd749@gmail.com',
-                subject: "❌ Build Failed - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: "Build failed. Please check Jenkins logs for details."
+            echo 'Pipeline failed ❌'
         }
     }
 }
