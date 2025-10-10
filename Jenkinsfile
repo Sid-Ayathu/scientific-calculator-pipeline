@@ -73,7 +73,6 @@
 //     }
 // }
 
-//vishruth's jenkinfile
 pipeline {
     agent {
         label 'wsl'
@@ -127,4 +126,5 @@ pipeline {
             echo 'Pipeline failed ❌'
         }
     }
+
 }
