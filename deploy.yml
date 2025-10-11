@@ -1,7 +1,51 @@
+# # ---
+# # - name: Deploy Scientific Calculator
+# #   hosts: local
+# #   tasks:
+# #     - name: Print a deployment message
+# #       ansible.builtin.debug:
+# #         msg: "Deployment would happen here. The pipeline is complete!"
+
+# ---
+# - name: Deploy Scientific Calculator
+#   hosts: local
+#   tasks:
+#     - name: Run Scientific Calculator container
+#       community.docker.docker_container:
+#         name: sci-calc
+#         image: yourusername/scientific-calculator:latest
+#         state: started
+#         tty: yes
+#         stdin_open: yes
+#         command: ["python3", "main.py"]
 ---
 - name: Deploy Scientific Calculator
   hosts: local
+  become: yes
   tasks:
-    - name: Print a deployment message
+    - name: Pull latest image from Docker Hub
+      community.docker.docker_image:
+        name: salvoslayer/scientific-calculator:latest
+        source: pull
+
+    - name: Stop and remove any existing container
+      community.docker.docker_container:
+        name: sci_calc_container
+        state: absent
+
+    - name: Run new container in background
+      community.docker.docker_container:
+        name: sci_calc_container
+        image: salvoslayer/scientific-calculator:latest
+        state: started
+        detach: true
+        tty: true
+        command: tail -f /dev/null   # keeps container running for later CLI access
+
+    - name: Display running containers
+      ansible.builtin.shell: docker ps
+      register: docker_ps_output
+
+    - name: Show docker ps output
       ansible.builtin.debug:
-        msg: "Deployment would happen here. The pipeline is complete!"
+        var: docker_ps_output.stdout

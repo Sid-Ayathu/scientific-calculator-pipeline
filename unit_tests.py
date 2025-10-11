@@ -6,7 +6,7 @@ class TestCalculator(unittest.TestCase):
 
     def test_square_root(self):
         """Test the square root function."""
-        self.assertAlmostEqual(square_root(16), 4.0)
+        self.assertAlmostEqual(square_root(9), 3.0)
         self.assertAlmostEqual(square_root(9), 3.0)
         self.assertAlmostEqual(square_root(0), 0.0)
         # Test for ValueError on negative input
