@@ -25,4 +25,3 @@
       # The '--rm' flag automatically removes the container when it exits.
       ansible.builtin.shell:
         cmd: "docker run --rm -it --name calculator-app salvoslayer/scientific_calculator:latest"
-
