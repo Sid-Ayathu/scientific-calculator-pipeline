@@ -80,7 +80,7 @@ pipeline {
                     echo 'Running unit tests...'
                     // Use the full, absolute path to python.exe
                     // Make sure to wrap it in quotes and use double backslashes!
-                    bat 'py unit_tests.py'
+                    bat 'python3 unit_tests.py'
                 }
             }
 
