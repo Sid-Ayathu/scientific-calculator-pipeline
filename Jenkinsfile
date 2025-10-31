@@ -1,57 +1,89 @@
 pipeline {
-    
+    // This pipeline must run on an agent that has Docker installed.
+    // The Jenkins controller (your WSL instance) *can* be the agent,
+    // but you must install Docker in WSL first:
+    // sudo apt install docker.io -y
+    // sudo usermod -aG docker jenkins  (Gives Jenkins permission to use Docker)
+    // sudo systemctl restart jenkins
     agent any
+
     environment {
-        DOCKERHUB_USER = 'salvoslayer'
-        DOCKER_IMAGE = "${DOCKERHUB_USER}/scientific-calculator"
+        // This is the credentials ID you created in Step 6
+        DOCKERHUB_CREDS = 'dockerhub-credentials'
+        
+        // --- !!! CHANGE THESE !!! ---
+        DOCKERHUB_USERNAME = 'salvoslayer'
+        IMAGE_NAME = 'scientific-calculator'
+        // ------------------------------
     }
 
     stages {
         stage('Checkout') {
+            // This 'Pull GitHub repo' step is now handled by Jenkins
+            // when it reads this file from your SCM.
             steps {
-                git branch: 'main', url: 'https://github.com/Sid-Ayathu/scientific-calculator-pipeline.git'
+                echo 'Checking out code...'
+                // 'checkout scm' is automatic when using 'Pipeline from SCM'
             }
         }
 
-        stage('Install dependencies & Test') {
+        stage('Run Test Cases') {
             steps {
-                sh 'pip install -r requirements.txt'
-                sh 'python3 -m unittest discover'
+                // Assuming you use Python/pytest, as in the previous file.
+                // If you use Java/Maven, this would be: sh 'mvn clean test'
+                echo 'Running tests...'
+                sh 'pip3 install -r requirements.txt'
+                sh 'pytest --junitxml=report.xml'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE:latest .'
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    sh 'echo $PASS | docker login -u $USER --password-stdin'
-                    sh 'docker push $DOCKER_IMAGE:latest'
+                script {
+                    echo "Building Docker image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME}..."
+                    // Use the Dockerfile in your repo
+                    def app = docker.build("${DOCKERHUB_USERNAME}/${IMAGE_NAME}")
                 }
             }
         }
 
-        stage('Deploy with Ansible') {
+        stage('Login & Push to Docker Hub') {
             steps {
-                sh 'ansible-playbook -i hosts.ini deploy.yml'
+                script {
+                    // Use the Credentials Binding plugin (docker.withRegistry)
+                    docker.withRegistry("[https://index.docker.io/v1/](https://index.docker.io/v1/)", DOCKERHUB_CREDS) {
+                        echo "Pushing image..."
+                        // Tags and pushes the image
+                        app.push("latest")
+                    }
+                }
+            }
+        }
+
+        stage('Deploy on Local System') {
+            steps {
+                echo 'Deploying new container on local (WSL) system...'
+                // This stops and removes any *old* container
+                sh 'docker stop ${IMAGE_NAME} || true'
+                sh 'docker rm ${IMAGE_NAME} || true'
+
+                // This runs the *new* image you just pushed
+                sh 'docker run -d --name ${IMAGE_NAME} -p 8081:8080 ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest'
+                // Note: I'm using port 8081 on the host to avoid colliding with Jenkins on 8080
             }
         }
     }
-
+    
     post {
-        success {
-            echo 'Pipeline finished successfully ✅'
+        // This 'post' block runs after all stages are finished
+        always {
+            // Publish the test results
+            junit 'report.xml'
+            
+            echo 'Pipeline finished.'
+            
+            // This cleans up the workspace for the next build.
+            cleanWs()
         }
-        failure {
-            echo 'Pipeline failed ❌'
-        }
-        
     }
 }
-
-
-
