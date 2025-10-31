@@ -57,14 +57,12 @@
 // }
 
 pipeline {
-    // 'agent any' tells Jenkins to run on the main Jenkins machine (your WSL instance)
+    // 'agent any' tells Jenkins to run on the main Jenkins machine (your Windows machine)
     agent any
 
     environment {
-        // Set your Docker Hub username and image name
         DOCKER_USERNAME = 'salvoslayer'
         IMAGE_NAME = 'scientific_calculator'
-        // This is the ID of the credential we will create in Jenkins
         DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
     }
 
@@ -77,12 +75,13 @@ pipeline {
             }
         }
 
-        // Stage 2: Run tests using the 'python3' command on the WSL machine
+        // Stage 2: Run tests using the 'python' command on Windows
         stage('Test') {
             steps {
                 echo 'Running unit tests...'
-                // This requires 'python3' to be installed on your WSL machine
-                sh 'python3 unit_tests.py'
+                // Use 'bat' (Windows Batch) instead of 'sh'
+                // Use 'python' instead of 'python3' (typical for Windows)
+                bat 'python unit_tests.py'
             }
         }
 
@@ -90,8 +89,8 @@ pipeline {
         stage('Build Image') {
             steps {
                 echo "Building Docker image: ${DOCKER_USERNAME}/${IMAGE_NAME}..."
-                // This requires the 'jenkins' user to have Docker permissions
-                sh "docker build -t ${DOCKER_USERNAME}/${IMAGE_NAME} ."
+                // Use 'bat' to run the Docker command
+                bat "docker build -t ${DOCKER_USERNAME}/${IMAGE_NAME} ."
             }
         }
 
@@ -99,24 +98,26 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 echo 'Logging in and pushing to Docker Hub...'
-                // Uses the credential with the ID 'dockerhub-credentials'
+                // This is the corrected 'withCredentials' block
                 withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     // Log in using the injected variables
-                    sh "echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin"
+                    bat "echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin"
                     // Push the image
-                    sh "docker push ${DOCKER_USERNAME}/${IMAGE_NAME}:latest"
+                    bat "docker push ${DOCKER_USERNAME}/${IMAGE_NAME}:latest"
                 }
             }
         }
 
-        // Stage 5: Deploy using Ansible
+        // Stage 5: Deploy using Ansible (run from within WSL)
         stage('Deploy') {
             steps {
-                echo 'Deploying container with Ansible...'
-                // This requires 'ansible' to be installed on your WSL machine
-                // It runs the playbook, which will run 'docker pull' and 'docker run'
-                sh 'ansible-playbook -i hosts playbook.yml'
+                echo 'Deploying container with Ansible via WSL...'
+                // This command tells Windows to run the 'ansible-playbook' command
+                // inside your default WSL (Ubuntu) environment.
+                // It assumes your hosts and playbook.yml file are in the workspace.
+                bat 'wsl ansible-playbook -i hosts playbook.yml'
             }
         }
     }
 }
+
