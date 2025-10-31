@@ -1,3 +1,4 @@
+def app
 pipeline {
     // This pipeline must run on an agent that has Docker installed.
     // The Jenkins controller (your WSL instance) *can* be the agent,
@@ -95,6 +96,7 @@ pipeline {
         }
     }
 }
+
 
 
 
