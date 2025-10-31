@@ -58,14 +58,15 @@ pipeline {
             steps {
                 script {
                     // Use the Credentials Binding plugin (docker.withRegistry)
-                    docker.withRegistry("[https://index.docker.io/v1/](https://index.docker.io/v1/)", DOCKERHUB_CREDS) {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDS) {
                         echo "Pushing image..."
                         // Tags and pushes the image
-                        app.push("latest")
+                        app.push('latest')
                     }
                 }
             }
         }
+
 
         stage('Deploy on Local System') {
             steps {
@@ -94,5 +95,6 @@ pipeline {
         }
     }
 }
+
 
 
