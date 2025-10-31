@@ -1,7 +1,4 @@
 pipeline {
-    // agent {
-    //     label 'wsl'
-    // }
     
     agent any
     environment {
@@ -55,5 +52,6 @@ pipeline {
         
     }
 }
+
 
 
