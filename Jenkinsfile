@@ -34,6 +34,9 @@ pipeline {
                 echo 'Running tests...'
                 sh 'pip3 install -r requirements.txt'
                 // --- THIS IS THE FIX ---
+                // We must explicitly install pytest since requirements.txt is empty
+                sh 'pip3 install pytest'
+                
                 // We use 'python3 -m pytest' instead of just 'pytest'
                 // to ensure the 'jenkins' user can find the module
                 // it just installed in its local directory.
@@ -91,4 +94,5 @@ pipeline {
         }
     }
 }
+
 
