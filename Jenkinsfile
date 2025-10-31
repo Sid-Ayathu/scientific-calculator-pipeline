@@ -49,7 +49,7 @@ pipeline {
                 script {
                     echo "Building Docker image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME}..."
                     // Use the Dockerfile in your repo
-                    def app = docker.build("${DOCKERHUB_USERNAME}/${IMAGE_NAME}")
+                    app = docker.build("${DOCKERHUB_USERNAME}/${IMAGE_NAME}")
                 }
             }
         }
@@ -95,6 +95,7 @@ pipeline {
         }
     }
 }
+
 
 
 
