@@ -80,7 +80,7 @@ pipeline {
                 echo 'Running unit tests...'
                 // Use 'bat' (Windows Batch) instead of 'sh'
                 // Use 'python' instead of 'python3' (typical for Windows)
-                bat 'python unit_tests.py'
+                bat 'py unit_tests.py'
             }
         }
 
