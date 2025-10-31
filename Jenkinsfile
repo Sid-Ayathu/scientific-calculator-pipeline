@@ -76,13 +76,13 @@ pipeline {
 
         // Stage 2: Run tests using the 'python' command on Windows
         stage('Test') {
-            steps {
-                echo 'Running unit tests...'
-                // Use 'bat' (Windows Batch) instead of 'sh'
-                // Use 'python' instead of 'python3' (typical for Windows)
-                bat 'py unit_tests.py'
+                steps {
+                    echo 'Running unit tests...'
+                    // Use the full, absolute path to python.exe
+                    // Make sure to wrap it in quotes and use double backslashes!
+                    bat '"C:\\Users\\Siddharth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe" unit_tests.py'
+                }
             }
-        }
 
         // Stage 3: Build the Docker image
         stage('Build Image') {
