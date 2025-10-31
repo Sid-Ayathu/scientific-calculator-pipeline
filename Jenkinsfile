@@ -80,7 +80,7 @@ pipeline {
                     echo 'Running unit tests...'
                     // Use the full, absolute path to python.exe
                     // Make sure to wrap it in quotes and use double backslashes!
-                    bat '"C:\\Users\\Siddharth\\AppData\\Local\\Programs\\Python\\Python311\\python.exe" unit_tests.py'
+                    bat 'py unit_tests.py'
                 }
             }
 
