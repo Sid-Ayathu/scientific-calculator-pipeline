@@ -33,7 +33,11 @@ pipeline {
                 // If you use Java/Maven, this would be: sh 'mvn clean test'
                 echo 'Running tests...'
                 sh 'pip3 install -r requirements.txt'
-                sh 'pytest --junitxml=report.xml'
+                // --- THIS IS THE FIX ---
+                // We use 'python3 -m pytest' instead of just 'pytest'
+                // to ensure the 'jenkins' user can find the module
+                // it just installed in its local directory.
+                sh 'python3 -m pytest --junitxml=report.xml'
             }
         }
 
@@ -87,3 +91,4 @@ pipeline {
         }
     }
 }
+
