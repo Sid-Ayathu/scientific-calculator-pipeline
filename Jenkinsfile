@@ -9,13 +9,9 @@ pipeline {
     agent any
 
     environment {
-        // This is the credentials ID you created in Step 6
         DOCKERHUB_CREDS = 'dockerhub-credentials'
-        
-        // --- !!! CHANGE THESE !!! ---
         DOCKERHUB_USERNAME = 'salvoslayer'
         IMAGE_NAME = 'scientific-calculator'
-        // ------------------------------
     }
 
     stages {
@@ -96,6 +92,7 @@ pipeline {
         }
     }
 }
+
 
 
 
