@@ -1,11 +1,5 @@
 def app
 pipeline {
-    // This pipeline must run on an agent that has Docker installed.
-    // The Jenkins controller (your WSL instance) *can* be the agent,
-    // but you must install Docker in WSL first:
-    // sudo apt install docker.io -y
-    // sudo usermod -aG docker jenkins  (Gives Jenkins permission to use Docker)
-    // sudo systemctl restart jenkins
     agent any
 
     environment {
@@ -16,27 +10,16 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            // This 'Pull GitHub repo' step is now handled by Jenkins
-            // when it reads this file from your SCM.
             steps {
                 echo 'Checking out code...'
-                // 'checkout scm' is automatic when using 'Pipeline from SCM'
             }
         }
 
         stage('Run Test Cases') {
             steps {
-                // Assuming you use Python/pytest, as in the previous file.
-                // If you use Java/Maven, this would be: sh 'mvn clean test'
                 echo 'Running tests...'
                 sh 'pip3 install -r requirements.txt'
-                // --- THIS IS THE FIX ---
-                // We must explicitly install pytest since requirements.txt is empty
                 sh 'pip3 install pytest'
-                
-                // We use 'python3 -m pytest' instead of just 'pytest'
-                // to ensure the 'jenkins' user can find the module
-                // it just installed in its local directory.
                 sh 'python3 -m pytest --junitxml=report.xml'
             }
         }
@@ -45,7 +28,6 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME}..."
-                    // Use the Dockerfile in your repo
                     app = docker.build("${DOCKERHUB_USERNAME}/${IMAGE_NAME}")
                 }
             }
@@ -54,7 +36,6 @@ pipeline {
         stage('Login & Push to Docker Hub') {
             steps {
                 script {
-                    // Use the Credentials Binding plugin (docker.withRegistry)
                     docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDS) {
                         echo "Pushing image..."
                         // Tags and pushes the imag
@@ -65,11 +46,9 @@ pipeline {
         }
 
 
-        // --- THIS STAGE IS MODIFIED ---
         stage('Deploy on Local System (with Ansible)') {
             steps {
                 echo 'Deploying new container via Ansible...'
-                
                 // This one command runs the playbook we created.
                 // We pass the Jenkins environment variables to the playbook
                 // using '--extra-vars' so Ansible can use them.
@@ -85,18 +64,13 @@ pipeline {
     }
     
     post {
-        // This 'post' block runs after all stages are finished
         always {
-            // Publish the test results
-            //junit 'report.xml'
-            
             echo 'Pipeline finished.'
-            
-            // This cleans up the workspace for the next build.
             cleanWs()
         }
     }
 }
+
 
 
 
