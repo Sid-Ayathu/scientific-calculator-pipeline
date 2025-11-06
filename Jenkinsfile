@@ -1,59 +1,68 @@
+
+
 pipeline {
-    // agent {
-    //     label 'wsl'
-    // }
-    
     agent any
+
     environment {
-        DOCKERHUB_USER = 'salvoslayer'
-        DOCKER_IMAGE = "${DOCKERHUB_USER}/scientific-calculator"
+        DOCKERHUB_CREDS = 'dockerhub-credentials'
+        
+        DOCKERHUB_USERNAME = 'salvoslayer'
+        IMAGE_NAME = "${DOCKERHUB_USERNAME}/scientific-calculator"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Sid-Ayathu/scientific-calculator-pipeline.git'
+                echo 'Checking out code...'
             }
         }
 
-        stage('Install dependencies & Test') {
+        stage('Run Test Cases') {
             steps {
-                sh 'pip install -r requirements.txt'
-                sh 'python3 -m unittest discover'
+                echo 'Running tests...'
+                sh 'pip3 install -r requirements.txt'
+                sh 'pytest --junitxml=report.xml'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE:latest .'
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    sh 'echo $PASS | docker login -u $USER --password-stdin'
-                    sh 'docker push $DOCKER_IMAGE:latest'
+                script {
+                    echo "Building Docker image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME}..."
+                    
+                    def app = docker.build("${DOCKERHUB_USERNAME}/${IMAGE_NAME}")
                 }
             }
         }
 
-        stage('Deploy with Ansible') {
+        stage('Login & Push to Docker Hub') {
             steps {
-                sh 'ansible-playbook -i hosts.ini deploy.yml'
+                script {
+                    docker.withRegistry("[https://index.docker.io/v1/](https://index.docker.io/v1/)", DOCKERHUB_CREDS) {
+                        echo "Pushing image..."
+                        
+                        app.push("latest")
+                    }
+                }
+            }
+        }
+
+        stage('Deploy on Local System') {
+            steps {
+                echo 'Deploying new container on local (WSL) system...'
+                
+                sh 'docker stop ${IMAGE_NAME} || true'
+                sh 'docker rm ${IMAGE_NAME} || true'
+
+                sh 'docker run -d --name ${IMAGE_NAME} -p 8081:8080 ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest'
             }
         }
     }
-
+    
     post {
-        success {
-            echo 'Pipeline finished successfully ✅'
+        always {
+            echo 'Pipeline finished.'
+            cleanWs()
         }
-        failure {
-            echo 'Pipeline failed ❌'
-        }
-        
     }
 }
-
-
