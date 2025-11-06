@@ -1,7 +1,6 @@
 def app
 pipeline {
     agent any
-
     environment {
         DOCKERHUB_CREDS = 'dockerhub-credentials'
         DOCKERHUB_USERNAME = 'salvoslayer'
@@ -70,6 +69,7 @@ pipeline {
         }
     }
 }
+
 
 
 
