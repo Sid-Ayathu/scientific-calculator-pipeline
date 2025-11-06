@@ -57,7 +57,7 @@ pipeline {
                     // Use the Credentials Binding plugin (docker.withRegistry)
                     docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDS) {
                         echo "Pushing image..."
-                        // Tags and pushes the image
+                        // Tags and pushes the imag
                         app.push('latest')
                     }
                 }
