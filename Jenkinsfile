@@ -65,16 +65,21 @@ pipeline {
         }
 
 
-        stage('Deploy on Local System') {
+        // --- THIS STAGE IS MODIFIED ---
+        stage('Deploy on Local System (with Ansible)') {
             steps {
-                echo 'Deploying new container on local (WSL) system...'
-                // This stops and removes any *old* container
-                sh 'docker stop ${IMAGE_NAME} || true'
-                sh 'docker rm ${IMAGE_NAME} || true'
-
-                // This runs the *new* image you just pushed
-                sh 'docker run -d --name ${IMAGE_NAME} -p 8081:8080 ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest'
-                // Note: I'm using port 8081 on the host to avoid colliding with Jenkins on 8080
+                echo 'Deploying new container via Ansible...'
+                
+                // This one command runs the playbook we created.
+                // We pass the Jenkins environment variables to the playbook
+                // using '--extra-vars' so Ansible can use them.
+                sh '''
+                    ansible-playbook deploy.yml --extra-vars " \
+                        docker_username=${DOCKERHUB_USERNAME} \
+                        app_image_name=${IMAGE_NAME} \
+                        host_port=8081 \
+                        container_port=8080"
+                '''
             }
         }
     }
@@ -92,6 +97,7 @@ pipeline {
         }
     }
 }
+
 
 
 
