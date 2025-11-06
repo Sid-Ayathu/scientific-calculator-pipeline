@@ -83,7 +83,7 @@ pipeline {
         // This 'post' block runs after all stages are finished
         always {
             // Publish the test results
-            junit 'report.xml'
+            //junit 'report.xml'
             
             echo 'Pipeline finished.'
             
